@@ -515,7 +515,3 @@ La práctica permitió comprender que el osciloscopio puede utilizarse no solo p
 * Fundamento teórico de **figuras de Lissajous** y visualización en modo XY.
 * Fundamento teórico de **filtros RC pasa bajos**.
 * Ecuación de frecuencia de corte:
-
-[
-f_c=\frac{1}{2\pi RC}
-]
