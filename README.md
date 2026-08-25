@@ -2,33 +2,34 @@
 
 En esta actividad se realizó el diseño e implementación de una **figura tipo paisaje** visualizada en un osciloscopio mediante el **modo XY**, utilizando una **ESP32-WROOM-32 programada en MicroPython**.
 
-La figura seleccionada por el grupo corresponde a un **paisaje**, conformado por montañas de diferentes alturas, un valle, nieve, dos nubes, aves, un sol y el terreno inferior. Para generar esta imagen se emplearon dos señales independientes provenientes de la ESP32: una controla la posición horizontal **X** y la otra la posición vertical **Y** del osciloscopio.
+La figura seleccionada por el grupo corresponde a un paisaje compuesto por **montañas de diferentes alturas, un valle, nieve, dos nubes, aves, un sol y el terreno inferior**. Para generar esta imagen se utilizaron dos señales provenientes de la ESP32: una encargada de controlar la posición horizontal **X** y otra para la posición vertical **Y** del osciloscopio.
 
-Además, para suavizar las señales PWM generadas por la ESP32, se utilizó en cada canal un **filtro pasa bajos RC** compuesto por una **resistencia de 1 kΩ** y un **capacitor de 10 nF**.
+Además, como las señales generadas por la ESP32 corresponden a PWM, se implementó en cada canal un **filtro pasa bajos RC**, formado por una resistencia de **1 kΩ** y un capacitor de **10 nF**. Estos filtros permiten suavizar las señales antes de ingresarlas al osciloscopio.
 
 ---
 
 # ¿Qué es una figura de Lissajous?
 
-Las figuras de Lissajous se obtienen al utilizar dos señales para controlar simultáneamente los ejes horizontal y vertical de un osciloscopio en **modo XY**.
+Las figuras de Lissajous se obtienen al utilizar dos señales para controlar simultáneamente los ejes horizontal y vertical de un osciloscopio configurado en **modo XY**.
 
-De manera general, este tipo de representación puede expresarse como:
+De forma general, estas señales pueden representarse como:
 
-[
-x=A_x\sin(\omega_x t)
-]
+**x = Aₓ · sin(ωₓ · t)**
 
-[
-y=A_y\sin(\omega_y t+\delta)
-]
+**y = Aᵧ · sin(ωᵧ · t + δ)**
 
-donde (A_x) y (A_y) representan las amplitudes, (\omega_x) y (\omega_y) las frecuencias angulares y (\delta) la diferencia de fase.
+Donde:
 
-En esta práctica se utiliza el mismo principio de visualización XY, pero en lugar de generar únicamente señales sinusoidales, la ESP32 recorre una serie ordenada de **coordenadas X-Y**. Al repetir este recorrido a alta velocidad, el osciloscopio reconstruye la imagen del paisaje.
+* **Aₓ y Aᵧ:** amplitudes de las señales de los ejes X y Y.
+* **ωₓ y ωᵧ:** frecuencias angulares.
+* **t:** tiempo.
+* **δ:** diferencia de fase entre las señales.
 
-El proceso general es:
+En esta práctica se aprovecha el principio de visualización XY, pero en lugar de utilizar únicamente señales sinusoidales, la ESP32 recorre una serie ordenada de **coordenadas X-Y**. Al repetir este recorrido rápidamente, el osciloscopio reconstruye visualmente el paisaje.
 
-```text id="q4wm6r"
+El funcionamiento general es:
+
+```text
 Coordenadas del paisaje
           ↓
        ESP32
@@ -50,35 +51,35 @@ Coordenadas del paisaje
 
 # Desarrollo de la figura
 
-La figura fue construida mediante una secuencia de coordenadas almacenadas dentro del programa. Cada coordenada representa una posición:
+La figura fue construida mediante una secuencia de coordenadas almacenadas dentro del programa. Cada coordenada representa una posición determinada del dibujo:
 
-```text id="m5xj1m"
+```text
 (x, y)
 ```
 
-donde:
+Donde:
 
-* `x` determina la posición horizontal.
-* `y` determina la posición vertical.
+* **x:** determina la posición horizontal.
+* **y:** determina la posición vertical.
 
-El programa almacena inicialmente todos los puntos dentro de una lista:
+Los puntos se almacenan inicialmente en una lista:
 
-```python id="1d28zu"
+```python
 pts = []
 
 def P(x,y):
     pts.append((x,y))
 ```
 
-De esta manera, cada elemento del paisaje se convierte en un conjunto de puntos que después son recorridos rápidamente por la ESP32.
+De esta forma, los diferentes elementos del paisaje se convierten en conjuntos de puntos que posteriormente son recorridos por la ESP32.
 
 ---
 
 # Generación de líneas
 
-Para unir dos puntos se implementó la función:
+Para unir dos coordenadas se desarrolló la función:
 
-```python id="bifkik"
+```python
 def L(a,b,n=10):
     for i in range(1,n+1):
         t=i/n
@@ -86,29 +87,29 @@ def L(a,b,n=10):
           a[1]+(b[1]-a[1])*t)
 ```
 
-Esta función realiza una interpolación entre un punto inicial y uno final, generando varios puntos intermedios. Gracias a esto, las líneas se visualizan de manera continua sobre el osciloscopio.
+Esta función genera diferentes puntos intermedios entre un punto inicial y uno final. Esto evita movimientos demasiado bruscos y permite obtener líneas más continuas en la pantalla del osciloscopio.
 
-También se utilizó la función:
+También se utiliza:
 
-```python id="u4b9hj"
+```python
 def PL(v,n=10):
     for i in range(len(v)-1):
         L(v[i],v[i+1],n)
 ```
 
-que permite enlazar múltiples puntos consecutivos y facilita la construcción de figuras más complejas.
+Esta función permite conectar varias coordenadas consecutivamente, facilitando la creación de formas más complejas como las montañas, el valle y el terreno.
 
 ---
 
 # Construcción del paisaje
 
-La figura se organizó en diferentes elementos para facilitar su programación: montañas, valle, nieve, nubes, aves, sol y línea del terreno.
+El paisaje se dividió en diferentes elementos para facilitar su programación. Dentro del código se encuentran las montañas, el valle, la nieve, las nubes, las aves, el sol y el terreno inferior.
 
 ## Montañas y valle
 
-Los puntos principales definidos en el código son:
+Los puntos principales definidos son:
 
-```python id="m3ow94"
+```python
 S  = (50,174)
 
 P1 = (70,125)
@@ -118,19 +119,19 @@ P3 = (205,145)
 P4 = (230,112)
 ```
 
-Cada uno de estos puntos representa una parte clave del paisaje.
+Cada uno representa una parte importante de la figura:
 
-| Punto | Función           |
-| ----- | ----------------- |
-| `P1`  | Montaña izquierda |
-| `P2`  | Montaña más alta  |
-| `V`   | Valle             |
-| `P3`  | Montaña derecha   |
-| `P4`  | Montaña menor     |
+| Punto | Función                 |
+| ----- | ----------------------- |
+| `P1`  | Montaña izquierda       |
+| `P2`  | Montaña de mayor altura |
+| `V`   | Valle                   |
+| `P3`  | Montaña derecha         |
+| `P4`  | Montaña de menor altura |
 
-Para generar el valle, el programa realiza una bajada pronunciada desde una de las montañas:
+El valle se genera realizando una bajada desde una de las montañas:
 
-```python id="tpxspn"
+```python
 PL((
     P3,
     (194,120),
@@ -139,9 +140,9 @@ PL((
 ),10)
 ```
 
-Posteriormente se realiza el ascenso desde el valle hacia la montaña más alta:
+Posteriormente se realiza el ascenso desde el valle hacia la siguiente montaña:
 
-```python id="r6vyy7"
+```python
 PL((
     V,
     (176,95),
@@ -150,35 +151,37 @@ PL((
 ),10)
 ```
 
-Esto permite que la figura no sea plana y que tenga una variación visible de alturas.
+Esto permite obtener una cordillera con diferentes alturas y una separación clara entre las montañas.
 
 ---
 
 # Nieve en las montañas
 
-Para mejorar el aspecto visual del paisaje se añadió nieve en la cima de las montañas mediante la función:
+Para dar mayor detalle al paisaje se agregó nieve en las cimas mediante:
 
-```python id="9bq2k7"
+```python
 def nieve(p,a,b,c):
     PL((p,a,b,c,p),6)
 ```
 
-Esta función crea una forma pequeña e irregular alrededor de la cima. Por ejemplo, en la montaña principal se utilizó:
+Por ejemplo, para una de las montañas se emplea:
 
-```python id="5hkb9w"
+```python
 nieve(P2,
       (115,147),
       (125,155),
       (136,144))
 ```
 
+Estos pequeños recorridos generan formas irregulares sobre las cimas y permiten diferenciarlas del resto de la montaña.
+
 ---
 
 # Nubes
 
-Las nubes se construyeron mediante una secuencia de puntos relativos a un centro:
+Las nubes se generaron mediante diferentes coordenadas relativas a una posición central:
 
-```python id="m9ajwn"
+```python
 def nube(cx,cy):
     v=[(-25,0),(-20,10),(-10,13),(-4,22),(7,18),
        (14,25),(26,17),(29,5),(20,-3),(5,-4),
@@ -187,75 +190,75 @@ def nube(cx,cy):
     PL([(cx+a,cy+b) for a,b in v],5)
 ```
 
-En el paisaje final se agregaron **dos nubes**, ubicadas en diferentes posiciones para dar mayor equilibrio a la composición.
+En el paisaje final se incorporaron **dos nubes** en diferentes posiciones, buscando que la imagen tuviera una distribución más completa y menos simétrica.
 
 ---
 
 # Sol
 
-El sol se construyó con una circunferencia y varios rayos, utilizando funciones trigonométricas:
+El sol se genera mediante una circunferencia acompañada de varios rayos.
 
-```python id="81jv6d"
+```python
 def sol(cx,cy,r=18):
 ```
 
-En esta función se usan seno y coseno para recorrer distintos ángulos y así dibujar tanto el contorno circular como los rayos del sol.
+Para construirlo se utilizan las funciones trigonométricas seno y coseno, que permiten recorrer diferentes posiciones alrededor de un punto central.
+
+Cada punto del círculo se obtiene variando el ángulo y calculando sus coordenadas horizontales y verticales. Después se añaden líneas hacia el exterior para representar los rayos.
 
 ---
 
 # Aves
 
-Las aves se representaron mediante pequeñas líneas con forma de vuelo:
+Las aves se representan mediante pequeñas líneas similares a la forma de un ave en vuelo:
 
-```python id="5thhum"
+```python
 def ave(cx,cy,s=8):
     PL(((cx-s,cy+s//2),
         (cx,cy-s//2),
         (cx+s,cy+s)),5)
 ```
 
-En el diseño final se añadieron dos aves en la parte superior del paisaje.
+En el diseño final se incorporaron **dos aves** en la zona superior del paisaje.
 
 ---
 
 # Generación de señales con la ESP32-WROOM-32
 
-Para controlar los ejes X y Y del osciloscopio se utilizaron dos salidas PWM de la ESP32:
+Para controlar los dos ejes del osciloscopio se utilizaron dos salidas PWM:
 
-```python id="23bigb"
+```python
 X = PWM(Pin(4), freq=500_000)
 Y = PWM(Pin(5), freq=500_000)
 ```
 
-Las conexiones empleadas fueron:
+Las conexiones utilizadas son:
 
-| ESP32 | Función          | Osciloscopio |
-| ----- | ---------------- | ------------ |
-| GPIO4 | Coordenada X     | CH1 / X      |
-| GPIO5 | Coordenada Y     | CH2 / Y      |
-| GND   | Referencia común | GND          |
+| ESP32-WROOM-32 | Función          | Osciloscopio |
+| -------------- | ---------------- | ------------ |
+| GPIO4          | Señal del eje X  | CH1 / X      |
+| GPIO5          | Señal del eje Y  | CH2 / Y      |
+| GND            | Referencia común | GND          |
 
-La frecuencia PWM configurada en ambos canales fue de:
+La frecuencia establecida para ambos PWM es:
 
-```text id="jlwmcc"
-500 kHz
-```
+**fPWM = 500 kHz**
 
-La ESP32 no entrega directamente una señal analógica pura desde estos pines, sino una señal PWM cuyo ciclo útil cambia de acuerdo con el valor de la coordenada.
+La ESP32 genera una señal digital de alta frecuencia y modifica su ciclo útil dependiendo de la coordenada que debe representarse.
+
+De esta forma, un valor diferente de ciclo útil produce un nivel promedio de voltaje diferente después del filtro.
 
 ---
 
 # Conversión de coordenadas a PWM
 
-Las coordenadas del dibujo se encuentran aproximadamente en un rango de:
+Las coordenadas utilizadas en el programa se manejan aproximadamente entre:
 
-```text id="6l7a79"
-0 a 255
-```
+**0 y 255**
 
-Para convertirlas en valores adecuados para `duty_u16()`, se implementó:
+Para transformar estos valores en datos compatibles con `duty_u16()` se utiliza:
 
-```python id="4enhly"
+```python
 def D(v,inv=False):
     v=max(0,min(255,v))
 
@@ -265,36 +268,35 @@ def D(v,inv=False):
     return int(2500+v*(63000-2500)/255)
 ```
 
-Esta función realiza tres tareas principales:
+Esta función realiza tres procesos:
 
-1. Limita los valores al intervalo permitido.
-2. Invierte el eje si es necesario.
-3. Escala la coordenada a un valor compatible con el PWM.
+1. Limita el valor de la coordenada entre 0 y 255.
+2. Permite invertir el eje cuando sea necesario.
+3. Convierte la coordenada al rango utilizado por `duty_u16()`.
 
-Finalmente, los datos se preparan con:
+Finalmente, las coordenadas se transforman mediante:
 
-```python id="q1y5d2"
+```python
 datos=[(D(x,True),D(y)) for x,y in pts]
 ```
 
-En este caso se invierte el eje X para conservar la orientación correcta del paisaje en la pantalla del osciloscopio.
+En este caso se utiliza `True` para invertir el eje X y conservar la orientación correcta del paisaje en el osciloscopio.
 
 ---
 
 # Filtro pasa bajos en cada canal
 
-Dado que las señales generadas por la ESP32 son PWM, fue necesario usar un **filtro pasa bajos RC independiente para cada salida**.
+Las salidas GPIO4 y GPIO5 generan señales PWM. Para obtener una señal más suave y adecuada para el osciloscopio se utilizó un **filtro pasa bajos RC independiente en cada canal**.
 
-En ambos canales se utilizó:
+Los componentes utilizados fueron:
 
-```text id="czfcn5"
-R = 1 kΩ
-C = 10 nF
-```
+**R = 1 kΩ**
 
-La conexión para cada canal es:
+**C = 10 nF**
 
-```text id="jkul3n"
+La conexión de cada filtro es:
+
+```text
 GPIO ESP32
     │
    1 kΩ
@@ -306,9 +308,9 @@ GPIO ESP32
    GND
 ```
 
-Por tanto, el montaje completo es:
+Por lo tanto, para los dos canales se tiene:
 
-```text id="lnbdum"
+```text
 GPIO4 ── 1 kΩ ──┬── CH1 / X
                  │
                10 nF
@@ -323,57 +325,64 @@ GPIO5 ── 1 kΩ ──┬── CH2 / Y
                 GND
 ```
 
-## Frecuencia de corte
+---
 
-La frecuencia de corte de un filtro RC se calcula mediante:
+# Cálculo de la frecuencia de corte
 
-[
-f_c=\frac{1}{2\pi RC}
-]
+La frecuencia de corte de un filtro pasa bajos RC se determina mediante:
 
-Sustituyendo:
+**fc = 1 / (2πRC)**
 
-[
-R=1000\ \Omega
-]
+Para esta práctica se utilizaron:
 
-[
-C=10\times10^{-9}\ F
-]
+**R = 1000 Ω**
 
-se obtiene:
+**C = 10 nF = 10 × 10⁻⁹ F**
 
-[
-f_c=\frac{1}{2\pi(1000)(10\times10^{-9})}
-]
+Reemplazando los valores:
 
-[
-\boxed{f_c\approx 15.9\ kHz}
-]
+**fc = 1 / [2π · 1000 · (10 × 10⁻⁹)]**
 
-Como la señal PWM trabaja a **500 kHz**, esta frecuencia es mucho mayor que la frecuencia de corte del filtro. Por ello, la componente pulsante del PWM se atenúa considerablemente y se obtiene una señal más suave en cada canal.
+Por lo tanto:
 
-En términos prácticos:
+**fc ≈ 15 915 Hz**
 
-```text id="tcjlwm"
+o aproximadamente:
+
+**fc ≈ 15,9 kHz**
+
+La señal PWM generada por la ESP32 trabaja a:
+
+**fPWM = 500 kHz**
+
+Por tanto:
+
+**500 kHz > 15,9 kHz**
+
+La frecuencia del PWM se encuentra muy por encima de la frecuencia de corte del filtro. Esto permite atenuar gran parte de las componentes de alta frecuencia asociadas a la conmutación del PWM y conservar principalmente su valor promedio.
+
+El proceso puede resumirse como:
+
+```text
 PWM de 500 kHz
       ↓
 Filtro RC
+fc ≈ 15,9 kHz
       ↓
 Señal suavizada
       ↓
 Posición X o Y
 ```
 
-Sin estos filtros, la visualización tendría mucho más ruido y la figura sería menos estable.
+Esto mejora la estabilidad y definición del paisaje observado en el osciloscopio.
 
 ---
 
 # Recorrido de la figura
 
-Una vez generados todos los puntos, el programa entra en un ciclo infinito:
+Después de generar y convertir todas las coordenadas, el programa comienza a recorrerlas continuamente:
 
-```python id="908578"
+```python
 while True:
     for x,y in datos:
         X.duty_u16(x)
@@ -381,42 +390,40 @@ while True:
         sleep_us(T)
 ```
 
-El tiempo empleado entre cada punto es:
+El tiempo utilizado entre cada punto es:
 
-```python id="2psfqr"
-T = 25
-```
+**T = 25 μs**
 
-es decir, aproximadamente **25 μs por punto**.
+Esto significa que cada pareja de coordenadas permanece aproximadamente 25 microsegundos antes de pasar a la siguiente.
 
-Al repetirse este recorrido continuamente, el osciloscopio reconstruye la figura completa gracias a la rapidez de actualización y a la persistencia visual de la pantalla.
+El recorrido se repite constantemente. Debido a la rapidez con la que se actualizan los puntos, el osciloscopio muestra el conjunto como una figura completa y aparentemente estable.
 
 ---
 
 # Uso de la ESP32-WROOM-32
 
-La **ESP32-WROOM-32** fue el elemento central de la práctica. Su función fue ejecutar el programa, recorrer la secuencia de coordenadas y generar las dos señales PWM necesarias para el modo XY.
+La **ESP32-WROOM-32** es el elemento principal encargado de generar las señales necesarias para construir el paisaje.
 
-Los recursos de la placa utilizados en esta práctica fueron:
+Durante esta práctica se utilizaron los siguientes recursos:
 
-| Recurso     | Uso                                       |
-| ----------- | ----------------------------------------- |
-| Procesador  | Ejecuta el recorrido de coordenadas       |
-| GPIO4       | Señal del eje X                           |
-| GPIO5       | Señal del eje Y                           |
-| PWM         | Generación de niveles variables           |
-| Memoria     | Almacenamiento de los puntos de la figura |
-| MicroPython | Programación del sistema                  |
+| Recurso     | Aplicación                                        |
+| ----------- | ------------------------------------------------- |
+| Procesador  | Ejecución del programa y recorrido de coordenadas |
+| GPIO4       | Generación de la señal para X                     |
+| GPIO5       | Generación de la señal para Y                     |
+| PWM         | Representación de las coordenadas                 |
+| Memoria     | Almacenamiento de los puntos                      |
+| MicroPython | Desarrollo del programa                           |
 
-Aunque la tarjeta posee otros periféricos como Wi-Fi, Bluetooth y ADC, en esta práctica no fueron necesarios.
+En esta aplicación no fue necesario utilizar otros periféricos disponibles en la ESP32, como Wi-Fi, Bluetooth o ADC.
 
 ---
 
 # Arquitectura desarrollada
 
-La arquitectura implementada puede representarse de la siguiente forma:
+La arquitectura del sistema implementado puede representarse como:
 
-```text id="x6vp4v"
+```text
                 CÓDIGO MICROPYTHON
                        │
                        ↓
@@ -430,9 +437,9 @@ La arquitectura implementada puede representarse de la siguiente forma:
                PWM X       PWM Y
                  │           │
                  ↓           ↓
-              R = 1kΩ     R = 1kΩ
+              R = 1 kΩ    R = 1 kΩ
                  │           │
-             C = 10nF     C = 10nF
+             C = 10 nF   C = 10 nF
                  │           │
                  ↓           ↓
                 CH1         CH2
@@ -446,63 +453,75 @@ La arquitectura implementada puede representarse de la siguiente forma:
                     PAISAJE
 ```
 
-Esta arquitectura muestra claramente tres etapas:
+La arquitectura puede dividirse en tres etapas principales:
 
-1. **Procesamiento:** la ESP32 calcula y recorre los puntos.
-2. **Filtrado:** el PWM se suaviza mediante filtros RC.
-3. **Visualización:** el osciloscopio reconstruye la figura en modo XY.
+### 1. Procesamiento
+
+La ESP32 ejecuta el código de MicroPython y recorre todas las coordenadas correspondientes a la figura.
+
+### 2. Generación y filtrado
+
+Los GPIO4 y GPIO5 generan señales PWM de 500 kHz. Posteriormente cada señal pasa por un filtro RC de **1 kΩ y 10 nF**.
+
+### 3. Visualización
+
+Las señales filtradas ingresan a CH1 y CH2 del osciloscopio. Al activar el modo XY, cada pareja de voltajes representa una posición dentro de la pantalla y permite reconstruir el paisaje.
 
 ---
 
 # Funcionamiento real en el osciloscopio
 
-Para la prueba física se conectó:
+Para realizar la prueba física se conectaron las señales de la siguiente forma:
 
-```text id="qe421h"
+```text
 GPIO4 → filtro RC → CH1
 GPIO5 → filtro RC → CH2
-GND ESP32 → GND del osciloscopio
+GND ESP32 → referencia GND
 ```
 
-Posteriormente el osciloscopio se configuró en:
+El osciloscopio se configuró posteriormente en:
 
-```text id="e8jyas"
+```text
 Modo XY
 X = CH1
 Y = CH2
 ```
 
-Con esta configuración fue posible visualizar el paisaje compuesto por montañas, valle, terreno, nubes, aves y sol.
+Con esta configuración fue posible visualizar el paisaje generado mediante el código.
 
-La evidencia experimental demuestra que ambas señales están correctamente sincronizadas y que el uso de los filtros RC permite obtener una figura suficientemente estable y reconocible.
+En la pantalla se pueden reconocer las **montañas de diferentes alturas, el valle, las nubes, el sol, las aves y el terreno inferior**.
 
-### Evidencia del funcionamiento real
-
-En este apartado se adjunta la fotografía del resultado observado en el osciloscopio:
-
-```markdown id="aukoqf"
-![Paisaje visualizado en el osciloscopio](imagenes/paisaje_osciloscopio.jpg)
-```
+La visualización obtenida demuestra que los dos canales se encuentran sincronizados y que el filtrado realizado sobre las señales PWM permite obtener una figura reconocible y estable.
 
 ---
 
 # Resultado
 
-Como resultado se logró representar un **paisaje completo mediante visualización XY utilizando una ESP32-WROOM-32**.
+Como resultado se logró generar un **paisaje completo utilizando una ESP32-WROOM-32 y un osciloscopio en modo XY**.
 
-La figura fue construida a partir de coordenadas organizadas en el programa, las cuales se transforman en señales PWM para los dos ejes del osciloscopio. Los filtros pasa bajos de **1 kΩ y 10 nF** fueron esenciales para suavizar estas señales antes de ingresarlas al osciloscopio.
+La imagen fue construida mediante coordenadas definidas dentro del programa. Estas coordenadas fueron transformadas en ciclos útiles PWM y enviadas simultáneamente mediante GPIO4 y GPIO5.
 
-La visualización obtenida permitió distinguir claramente los principales elementos del paisaje: montañas, valle, nieve, nubes, sol y aves.
+Los filtros pasa bajos formados por **R = 1 kΩ y C = 10 nF** permitieron suavizar las señales antes de introducirlas al osciloscopio. Para estos componentes se obtuvo una frecuencia de corte aproximada de:
+
+**fc ≈ 15,9 kHz**
+
+mientras que la frecuencia PWM utilizada fue de:
+
+**fPWM = 500 kHz**
+
+Finalmente, al configurar el osciloscopio en modo XY se logró visualizar correctamente la figura diseñada.
 
 ---
 
 # Conclusión
 
-Con el desarrollo de esta actividad se logró integrar programación en MicroPython, generación de PWM, filtrado analógico y visualización mediante osciloscopio.
+Con el desarrollo de esta actividad se logró integrar **programación en MicroPython, generación de señales PWM, filtrado analógico y visualización mediante un osciloscopio**.
 
-La **ESP32-WROOM-32** se encargó de recorrer las coordenadas del paisaje y generar dos señales independientes, una para cada eje. Los filtros RC implementados con **resistencia de 1 kΩ** y **capacitor de 10 nF** permitieron suavizar las señales PWM y hacer posible una representación más estable en el modo XY.
+La ESP32-WROOM-32 se encargó de recorrer las coordenadas que conforman el paisaje y generar dos señales independientes para controlar los ejes X y Y.
 
-La práctica permitió comprender que el osciloscopio puede utilizarse no solo para observar formas de onda convencionales, sino también para representar trayectorias diseñadas mediante coordenadas, siempre que exista sincronización entre ambos canales.
+Los filtros pasa bajos implementados con resistencias de **1 kΩ** y capacitores de **10 nF** permitieron reducir las componentes de alta frecuencia del PWM y obtener señales más suaves para la entrada del osciloscopio.
+
+La práctica permitió comprobar que el modo XY puede utilizarse no solamente para visualizar figuras de Lissajous convencionales, sino también para representar trayectorias diseñadas mediante coordenadas. De esta manera fue posible obtener un paisaje compuesto por diferentes elementos utilizando únicamente dos señales sincronizadas.
 
 ---
 
@@ -510,8 +529,39 @@ La práctica permitió comprender que el osciloscopio puede utilizarse no solo p
 
 ## Recursos científicos
 
-* **Espressif Systems**, documentación técnica de la **ESP32-WROOM-32**.
-* **MicroPython Documentation**, referencia del módulo `machine` y del uso de `PWM`.
-* Fundamento teórico de **figuras de Lissajous** y visualización en modo XY.
-* Fundamento teórico de **filtros RC pasa bajos**.
-* Ecuación de frecuencia de corte:
+* **Espressif Systems – ESP32-WROOM-32 Datasheet.**
+  Información técnica relacionada con la arquitectura, GPIO y características eléctricas del módulo.
+  https://documentation.espressif.com/esp32-wroom-32_datasheet_en.html
+
+* **MicroPython – Quick reference for the ESP32.**
+  Documentación utilizada como referencia para el manejo de GPIO y PWM mediante MicroPython.
+  https://docs.micropython.org/en/latest/esp32/quickref.html
+
+* **MicroPython – machine.PWM.**
+  Referencia de la clase utilizada para la generación de las señales PWM.
+  https://docs.micropython.org/en/latest/library/machine.PWM.html
+
+* **Repositorio de referencia – Figuras de Lissajous.**
+  Material suministrado como guía para el desarrollo y documentación de la actividad.
+  https://github.com/dialejobv/aplicacion_sistemas_embebidos/blob/main/2)%20LABORATORIO/Explicaci%C3%B3n_Fig_Lissajous.md
+
+## Datos empleados
+
+| Parámetro                | Valor          |
+| ------------------------ | -------------- |
+| Microcontrolador         | ESP32-WROOM-32 |
+| Lenguaje de programación | MicroPython    |
+| Eje X                    | GPIO4          |
+| Eje Y                    | GPIO5          |
+| Frecuencia PWM           | 500 kHz        |
+| Tiempo entre puntos      | 25 μs          |
+| Resistencia del filtro X | 1 kΩ           |
+| Capacitor del filtro X   | 10 nF          |
+| Resistencia del filtro Y | 1 kΩ           |
+| Capacitor del filtro Y   | 10 nF          |
+| Frecuencia de corte      | ≈ 15,9 kHz     |
+| Canal X del osciloscopio | CH1            |
+| Canal Y del osciloscopio | CH2            |
+| Configuración            | Modo XY        |
+| Figura desarrollada      | Paisaje        |
+
